@@ -1,0 +1,309 @@
+<div class="dashboard-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">🎓 EduSmart</div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-item" [class.active]="activeSection === 'applications'"
+                (click)="setSection('applications')">
+                📋 Applications
+            </div>
+            <div class="nav-item" [class.active]="activeSection === 'teachers'" (click)="setSection('teachers')">
+                👨‍🏫 Teachers
+            </div>
+            <div class="nav-item" [class.active]="activeSection === 'classes'" (click)="setSection('classes')">
+                🏫 Classes
+            </div>
+            <div class="nav-item" [class.active]="activeSection === 'timetable'" (click)="setSection('timetable')">
+                📅 Timetable
+            </div>
+            <div class="nav-item" [class.active]="activeSection === 'internships'" (click)="setSection('internships')">
+                💼 Internships
+            </div>
+        </nav>
+
+        <div class="sidebar-footer" (click)="logout()">
+            🚪 Logout
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <!-- Top Navbar -->
+        <div class="top-navbar">
+            <h1 class="page-title">{{ getSectionTitle() }}</h1>
+            <div class="admin-info">
+                <span class="admin-avatar">👨‍💼</span>
+                <span class="admin-name">Admin</span>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+
+            <!-- Applications Section -->
+            <div *ngIf="activeSection === 'applications'">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <span class="stat-number">{{ getPendingApplications() }}</span>
+                        <span class="stat-label">Pending Applications</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">{{ getApprovedApplications() }}</span>
+                        <span class="stat-label">Approved</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">{{ getRejectedApplications() }}</span>
+                        <span class="stat-label">Rejected</span>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <h3>Recent Applications</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Department</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let app of applications">
+                                <td>{{ app.fullName }}</td>
+                                <td>{{ app.department }}</td>
+                                <td>{{ app.date }}</td>
+                                <td><span class="badge {{ app.status }}">{{ app.status }}</span></td>
+                                <td>
+                                    <button class="btn-approve" (click)="approveApplication(app.id)">Approve</button>
+                                    <button class="btn-reject" (click)="rejectApplication(app.id)">Reject</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Teachers Section -->
+            <div *ngIf="activeSection === 'teachers'">
+                <div class="stats-row">
+  <div class="stat-card">
+    <span class="stat-number">{{ getTotalTeachers() }}</span>
+    <span class="stat-label">Total Teachers</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-number">{{ getTotalDepartments() }}</span>
+    <span class="stat-label">Departments</span>
+  </div>
+</div>
+                <div class="section-card">
+                    <div class="card-header">
+                        <h3>Teachers List</h3>
+                        <button class="btn-add" (click)="openAddTeacherModal()">+ Add Teacher</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Subjects</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let teacher of teachers">
+                                <td>{{ teacher.fullName }}</td>
+                                <td>{{ teacher.email }}</td>
+                                <td>{{ teacher.department }}</td>
+                                <td>{{ teacher.subjects }}</td>
+                                <td><button class="btn-edit">Edit</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Classes Section -->
+            <div *ngIf="activeSection === 'classes'">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <span class="stat-number">{{ classes.length }}</span>
+                        <span class="stat-label">Total Classes</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">{{ getTotalStudents() }}</span>
+                        <span class="stat-label">Total Students</span>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <div class="card-header">
+                        <h3>Classes List</h3>
+                        <button class="btn-add">+ Add Class</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Class Name</th>
+                                <th>Department</th>
+                                <th>Level</th>
+                                <th>Students</th>
+                                <th>Subjects</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let class of classes">
+                                <td>{{ class.name }}</td>
+                                <td>{{ class.department }}</td>
+                                <td>{{ class.level }}</td>
+                                <td>{{ class.studentCount }}</td>
+                                <td>{{ class.subjects.join(', ') }}</td>
+                                <td><button class="btn-edit">Edit</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Timetable Section -->
+            <div *ngIf="activeSection === 'timetable'">
+                <div class="section-card">
+                    <div class="card-header">
+                        <h3>AI Timetable Generator</h3>
+                        <button class="btn-add">⚡ Generate Timetable</button>
+                    </div>
+                    <p class="placeholder-text">Select a class to view its generated timetable. The AI ensures no
+                        conflicts between teachers, classrooms, and classes.</p>
+
+                    <!-- Class Selector -->
+                    <div class="class-selector">
+                        <div *ngFor="let class of classes" class="class-tab"
+                            [class.active]="selectedClass === class.name" (click)="selectClass(class.name)">
+                            {{ class.name }}
+                        </div>
+                    </div>
+
+                    <!-- Timetable Table -->
+                    <table class="data-table timetable-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Monday</th>
+                                <th>Tuesday</th>
+                                <th>Wednesday</th>
+                                <th>Thursday</th>
+                                <th>Friday</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let slot of getCurrentTimetable()">
+                                <td class="time-slot">{{ slot.time }}</td>
+                                <td [class.subject-cell]="slot.monday !== '—'">{{ slot.monday }}</td>
+                                <td [class.subject-cell]="slot.tuesday !== '—'">{{ slot.tuesday }}</td>
+                                <td [class.subject-cell]="slot.wednesday !== '—'">{{ slot.wednesday }}</td>
+                                <td [class.subject-cell]="slot.thursday !== '—'">{{ slot.thursday }}</td>
+                                <td [class.subject-cell]="slot.friday !== '—'">{{ slot.friday }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
+            <!-- Internships Section -->
+            <div *ngIf="activeSection === 'internships'">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <span class="stat-number">{{ getPendingInternships() }}</span>
+                        <span class="stat-label">Pending Requests</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">{{ getApprovedInternships() }}</span>
+                        <span class="stat-label">Approved</span>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <h3>Internship Requests</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Company</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let internship of internships">
+                                <td>{{ internship.student }}</td>
+                                <td>{{ internship.company }}</td>
+                                <td>{{ internship.duration }}</td>
+                                <td><span class="badge {{ internship.status }}">{{ internship.status }}</span></td>
+                                <td>
+                                    <button class="btn-approve"
+                                        (click)="approveInternship(internship.id)">Approve</button>
+                                    <button class="btn-reject" (click)="rejectInternship(internship.id)">Reject</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Add Teacher Modal -->
+    <div class="modal-overlay" *ngIf="showAddTeacherModal" (click)="closeAddTeacherModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+
+            <div class="modal-header">
+                <h3>Add New Teacher</h3>
+                <span class="modal-close" (click)="closeAddTeacherModal()">✕</span>
+            </div>
+
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" placeholder="e.g. Dr. Karim Bouaziz" [(ngModel)]="newTeacher.fullName"
+                    name="teacherName" />
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" placeholder="e.g. k.bouaziz@edusmart.com" [(ngModel)]="newTeacher.email"
+                    name="teacherEmail" />
+            </div>
+
+            <div class="form-group">
+                <label>Department</label>
+                <select [(ngModel)]="newTeacher.department" name="teacherDepartment">
+                    <option value="" disabled selected>Select department</option>
+                    <option>Computer Science</option>
+                    <option>Mathematics</option>
+                    <option>Physics</option>
+                    <option>Civil Engineering</option>
+                    <option>Electrical Engineering</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Subjects (comma separated)</label>
+                <input type="text" placeholder="e.g. Algorithms, Data Structures" [(ngModel)]="newTeacher.subjects"
+                    name="teacherSubjects" />
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" (click)="closeAddTeacherModal()">Cancel</button>
+                <button class="btn-add" (click)="addTeacher()">Add Teacher</button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
