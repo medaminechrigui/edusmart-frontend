@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
+import { AuthService } from '../services/auth.service';
 interface TimetableSlot {
   time: string;
   monday: string;
@@ -86,7 +86,7 @@ export class StudentDashboardComponent {
     'Dr. Leila Hamdi': [],
   };
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   setSection(section: string) {
     this.activeSection = section;
@@ -167,7 +167,7 @@ export class StudentDashboardComponent {
   }
 
   logout() {
-    this.router.navigate(['/']);
-  }
+  this.authService.logout();
+}
 
 }

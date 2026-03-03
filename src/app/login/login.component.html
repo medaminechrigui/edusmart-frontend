@@ -22,7 +22,9 @@
         {{ errorMessage }}
       </div>
 
-      <button type="submit" class="btn-submit">Login</button>
+      <button type="submit" class="btn-submit" [disabled]="isLoading">
+        {{ isLoading ? 'Signing in...' : 'Login' }}
+      </button>
 
     </form>
 

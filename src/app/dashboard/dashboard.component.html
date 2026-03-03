@@ -73,10 +73,10 @@
                         </thead>
                         <tbody>
                             <tr *ngFor="let app of applications">
-                                <td>{{ app.fullName }}</td>
+                                <td>{{ app.firstNameFr }} {{ app.lastNameFr }}</td>
                                 <td>{{ app.department }}</td>
-                                <td>{{ app.date }}</td>
-                                <td><span class="badge {{ app.status }}">{{ app.status }}</span></td>
+                                <td>{{ app.dateOfBirth }}</td>
+                                <td><span class="badge {{ app.status | lowercase }}">{{ app.status }}</span></td>
                                 <td>
                                     <button class="btn-approve" (click)="approveApplication(app.id)">Approve</button>
                                     <button class="btn-reject" (click)="rejectApplication(app.id)">Reject</button>
@@ -90,15 +90,15 @@
             <!-- Teachers Section -->
             <div *ngIf="activeSection === 'teachers'">
                 <div class="stats-row">
-  <div class="stat-card">
-    <span class="stat-number">{{ getTotalTeachers() }}</span>
-    <span class="stat-label">Total Teachers</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-number">{{ getTotalDepartments() }}</span>
-    <span class="stat-label">Departments</span>
-  </div>
-</div>
+                    <div class="stat-card">
+                        <span class="stat-number">{{ getTotalTeachers() }}</span>
+                        <span class="stat-label">Total Teachers</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">{{ getTotalDepartments() }}</span>
+                        <span class="stat-label">Departments</span>
+                    </div>
+                </div>
                 <div class="section-card">
                     <div class="card-header">
                         <h3>Teachers List</h3>
@@ -116,7 +116,7 @@
                         </thead>
                         <tbody>
                             <tr *ngFor="let teacher of teachers">
-                                <td>{{ teacher.fullName }}</td>
+                                <td>{{ teacher.firstName }} {{ teacher.lastName }}</td>
                                 <td>{{ teacher.email }}</td>
                                 <td>{{ teacher.department }}</td>
                                 <td>{{ teacher.subjects }}</td>
@@ -143,7 +143,7 @@
                 <div class="section-card">
                     <div class="card-header">
                         <h3>Classes List</h3>
-                        <button class="btn-add">+ Add Class</button>
+                        <button class="btn-add" (click)="openAddClassModal()">+ Add Class</button>
                     </div>
                     <table class="data-table">
                         <thead>
@@ -305,5 +305,51 @@
 
         </div>
     </div>
-
+    <!-- Add Class Modal -->
+    <div class="modal-overlay" *ngIf="showAddClassModal" (click)="closeAddClassModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Add New Class</h3>
+                <span class="modal-close" (click)="closeAddClassModal()">✕</span>
+            </div>
+            <div class="form-group">
+                <label>Class Name</label>
+                <input type="text" placeholder="e.g. DSI1" [(ngModel)]="newClass.name" name="className" />
+            </div>
+            <div class="form-group">
+                <label>Department</label>
+                <select [(ngModel)]="newClass.department" name="classDepartment">
+                    <option value="" disabled selected>Select department</option>
+                    <option>Computer Science</option>
+                    <option>Mathematics</option>
+                    <option>Physics</option>
+                    <option>Civil Engineering</option>
+                    <option>Electrical Engineering</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Level</label>
+                <select [(ngModel)]="newClass.level" name="classLevel">
+                    <option value="" disabled selected>Select level</option>
+                    <option>1st Year</option>
+                    <option>2nd Year</option>
+                    <option>3rd Year</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Number of Students</label>
+                <input type="number" placeholder="e.g. 30" [(ngModel)]="newClass.studentCount"
+                    name="classStudentCount" />
+            </div>
+            <div class="form-group">
+                <label>Subjects (comma separated)</label>
+                <input type="text" placeholder="e.g. Algorithms, Databases" [(ngModel)]="newClass.subjects"
+                    name="classSubjects" />
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" (click)="closeAddClassModal()">Cancel</button>
+                <button class="btn-add" (click)="addClass()">Add Class</button>
+            </div>
+        </div>
+    </div>
 </div>

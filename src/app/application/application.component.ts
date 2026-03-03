@@ -2,9 +2,11 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ApplicationService } from '../services/application.service';
 
 @Component({
   selector: 'app-application',
+  standalone: true,
   imports: [FormsModule, CommonModule],
   templateUrl: './application.component.html',
   styleUrl: './application.component.css'
@@ -42,8 +44,12 @@ export class ApplicationComponent {
 
   errorMessage: string = '';
   successMessage: string = '';
+  isLoading: boolean = false;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private applicationService: ApplicationService
+  ) {}
 
   onSubmit() {
     if (
@@ -68,12 +74,47 @@ export class ApplicationComponent {
       return;
     }
 
-    // For now just show success — later we'll send this to Spring Boot
+    this.isLoading = true;
     this.errorMessage = '';
-    this.successMessage = '✅ Your application has been submitted successfully! The admin will review it shortly.';
+
+    const applicationData = {
+      firstNameFr: this.firstNameFr,
+      lastNameFr: this.lastNameFr,
+      dateOfBirth: this.dateOfBirth,
+      placeOfBirth: this.placeOfBirth,
+      gender: this.gender,
+      nationality: this.nationality,
+      cin: this.cin,
+      cinIssueDate: this.cinIssueDate,
+      email: this.email,
+      phone: this.phone,
+      emergencyContact: this.emergencyContact,
+      address: this.address,
+      governorate: this.governorate,
+      postalCode: this.postalCode,
+      bacYear: this.bacYear,
+      bacSession: this.bacSession,
+      bacSection: this.bacSection,
+      bacGrade: this.bacGrade,
+      highSchool: this.highSchool,
+      department: this.department,
+      notes: this.notes
+    };
+
+    this.applicationService.submitApplication(applicationData).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.successMessage = 'Your application has been submitted successfully! The admin will review it shortly.';
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage = err.error || 'Something went wrong. Please try again.';
+      }
+    });
   }
 
   goBack() {
     this.router.navigate(['/']);
   }
+
 }

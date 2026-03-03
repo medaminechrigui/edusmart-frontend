@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -10,12 +11,16 @@ import { CommonModule } from '@angular/common';
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
+
   email: string = '';
   password: string = '';
   errorMessage: string = '';
+  isLoading: boolean = false;
 
-
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   onLogin() {
     if (!this.email || !this.password) {
@@ -28,20 +33,32 @@ export class LoginComponent {
       return;
     }
 
+    this.isLoading = true;
+    this.errorMessage = '';
 
-    if (this.email === 'admin@edusmart.com' && this.password === 'admin123') {
-      this.router.navigate(['/dashboard']);
-    }
-    else if (this.email === 'student@edusmart.com' && this.password === 'student123') {
-      this.router.navigate(['/student-dashboard']);
-      return;
-    } else if (this.email === 'teacher@edusmart.com' && this.password === 'teacher123') {
-      this.router.navigate(['/teacher-dashboard']);
-      return;
-    }
-    else {
-      this.errorMessage = 'Invalid email or password.';
-    }
+    this.authService.login(this.email, this.password).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.authService.saveToken(response.token);
+
+        // Decode role from token and redirect
+        const payload = JSON.parse(atob(response.token.split('.')[1]));
+        const role = payload.role;
+        this.authService.saveRole(role);
+
+        if (role === 'ADMIN') {
+          this.router.navigate(['/dashboard']);
+        } else if (role === 'TEACHER') {
+          this.router.navigate(['/teacher-dashboard']);
+        } else if (role === 'STUDENT') {
+          this.router.navigate(['/student-dashboard']);
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage = err.error || 'Invalid email or password.';
+      }
+    });
   }
 
   goBack() {

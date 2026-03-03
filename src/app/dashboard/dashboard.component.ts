@@ -1,18 +1,23 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ApplicationService } from '../services/application.service';
+import { AuthService } from '../services/auth.service';
+import { TeacherService } from '../services/teacher.service';
+import { CollegeClassService } from '../services/college-class.service';
 
 interface Application {
-  id: number;
-  fullName: string;
+  id: string;
+  firstNameFr: string;
+  lastNameFr: string;
   department: string;
-  date: string;
-  status: 'pending' | 'approved' | 'rejected';
+  dateOfBirth: string;
+  status: string;
 }
 
 interface Class {
-  id: number;
+  id: string;
   name: string;
   department: string;
   level: string;
@@ -30,8 +35,9 @@ interface TimetableSlot {
 }
 
 interface Teacher {
-  id: number;
-  fullName: string;
+  id: string;
+  firstName: string;
+  lastName: string;
   email: string;
   department: string;
   subjects: string;
@@ -42,7 +48,7 @@ interface Internship {
   student: string;
   company: string;
   duration: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: string;
 }
 
 @Component({
@@ -51,30 +57,18 @@ interface Internship {
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
 
   showAddTeacherModal: boolean = false;
-
-  
-
   activeSection: string = 'applications';
 
-  applications: Application[] = [
-    { id: 1, fullName: 'Ahmed Ben Ali', department: 'Computer Science', date: '2024-09-01', status: 'pending' },
-    { id: 2, fullName: 'Sarra Mansour', department: 'Mathematics', date: '2024-09-02', status: 'approved' },
-    { id: 3, fullName: 'Yassine Trabelsi', department: 'Electrical Engineering', date: '2024-09-03', status: 'rejected' },
-  ];
+  applications: Application[] = [];
 
   classes: Class[] = [
-    { id: 1, name: 'DSI1', department: 'Computer Science', level: '1st Year', studentCount: 30, subjects: ['Algorithms', 'Mathematics', 'English'] },
-    { id: 2, name: 'DSI2', department: 'Computer Science', level: '2nd Year', studentCount: 28, subjects: ['Data Structures', 'Databases', 'Web Development'] },
-    { id: 3, name: 'DSI3', department: 'Computer Science', level: '3rd Year', studentCount: 25, subjects: ['Software Engineering', 'Networks', 'AI'] },
-    { id: 4, name: 'GL1', department: 'Civil Engineering', level: '1st Year', studentCount: 22, subjects: ['Mechanics', 'Mathematics', 'Physics'] },
   ];
 
   teachers: Teacher[] = [
-    { id: 1, fullName: 'Dr. Karim Bouaziz', email: 'k.bouaziz@edusmart.com', department: 'Computer Science', subjects: 'Algorithms, Data Structures' },
-    { id: 2, fullName: 'Dr. Leila Hamdi', email: 'l.hamdi@edusmart.com', department: 'Mathematics', subjects: 'Analysis, Algebra' },
+
   ];
 
   internships: Internship[] = [
@@ -112,8 +106,15 @@ export class DashboardComponent {
   };
 
 
-
-  constructor(private router: Router) { }
+  
+showAddClassModal: boolean = false;
+newClass = {
+  name: '',
+  department: '',
+  level: '',
+  studentCount: 0,
+  subjects: ''
+};
 
   newTeacher = {
     fullName: '',
@@ -122,6 +123,77 @@ export class DashboardComponent {
     subjects: ''
   };
 
+  constructor(
+    private router: Router,
+    private applicationService: ApplicationService,
+    private authService: AuthService,
+    private teacherService: TeacherService,
+    private collegeClassService: CollegeClassService
+  ) {}
+
+  ngOnInit() {
+    this.loadApplications();
+    this.loadTeachers();
+    this.loadClasses();
+  }
+
+  loadClasses() {
+  this.collegeClassService.getAllClasses().subscribe({
+    next: (data) => {
+      this.classes = data;
+    },
+    error: (err) => console.error('Error loading classes:', err)
+  });
+}
+
+  loadTeachers() {
+  this.teacherService.getAllTeachers().subscribe({
+    next: (data) => {
+      this.teachers = data;
+    },
+    error: (err) => console.error('Error loading teachers:', err)
+  });
+}
+
+  loadApplications() {
+    this.applicationService.getAllApplications().subscribe({
+      next: (data) => {
+        this.applications = data;
+      },
+      error: (err) => {
+        console.error('Error loading applications:', err);
+      }
+    });
+  }
+
+  // Applications
+  approveApplication(id: string) {
+    this.applicationService.approveApplication(id).subscribe({
+      next: () => this.loadApplications(),
+      error: (err) => console.error(err)
+    });
+  }
+
+  rejectApplication(id: string) {
+    this.applicationService.rejectApplication(id).subscribe({
+      next: () => this.loadApplications(),
+      error: (err) => console.error(err)
+    });
+  }
+
+  getPendingApplications(): number {
+    return this.applications.filter(a => a.status === 'PENDING').length;
+  }
+
+  getApprovedApplications(): number {
+    return this.applications.filter(a => a.status === 'APPROVED').length;
+  }
+
+  getRejectedApplications(): number {
+    return this.applications.filter(a => a.status === 'REJECTED').length;
+  }
+
+  // Teachers
   openAddTeacherModal() {
     this.showAddTeacherModal = true;
   }
@@ -131,22 +203,76 @@ export class DashboardComponent {
     this.newTeacher = { fullName: '', email: '', department: '', subjects: '' };
   }
 
-  addTeacher() {
-  console.log('newTeacher:', this.newTeacher);
+ addTeacher() {
   if (!this.newTeacher.fullName || !this.newTeacher.email || !this.newTeacher.department || !this.newTeacher.subjects) {
-    console.log('Validation failed');
     return;
   }
-  this.teachers = [...this.teachers, {
-    id: this.teachers.length + 1,
-    fullName: this.newTeacher.fullName,
+
+  const nameParts = this.newTeacher.fullName.split(' ');
+  const firstName = nameParts[0];
+  const lastName = nameParts.slice(1).join(' ');
+
+  const teacher = {
+    firstName: firstName,
+    lastName: lastName,
     email: this.newTeacher.email,
+    password: 'teacher123',
     department: this.newTeacher.department,
-    subjects: this.newTeacher.subjects
-  }];
-  this.closeAddTeacherModal();
+    subjects: this.newTeacher.subjects,
+    role: 'TEACHER'
+  };
+
+  this.teacherService.addTeacher(teacher).subscribe({
+    next: () => {
+      this.loadTeachers();
+      this.closeAddTeacherModal();
+    },
+    error: (err) => console.error('Error adding teacher:', err)
+  });
 }
 
+  getTotalTeachers(): number {
+    return this.teachers.length;
+  }
+
+  getTotalDepartments(): number {
+    return [...new Set(this.teachers.map(t => t.department))].length;
+  }
+
+  // Classes
+  getTotalStudents(): number {
+    return this.classes.reduce((total, c) => total + c.studentCount, 0);
+  }
+
+  // Timetable
+  selectClass(className: string) {
+    this.selectedClass = className;
+  }
+
+  getCurrentTimetable(): TimetableSlot[] {
+    return this.timetables[this.selectedClass] || [];
+  }
+
+  // Internships
+  approveInternship(id: number) {
+    const internship = this.internships.find(i => i.id === id);
+    if (internship) internship.status = 'approved';
+  }
+
+  rejectInternship(id: number) {
+    const internship = this.internships.find(i => i.id === id);
+    if (internship) internship.status = 'rejected';
+  }
+
+  getPendingInternships(): number {
+    return this.internships.filter(i => i.status === 'pending').length;
+  }
+
+  getApprovedInternships(): number {
+    return this.internships.filter(i => i.status === 'approved').length;
+  }
+
+  // Sidebar
   setSection(section: string) {
     this.activeSection = section;
   }
@@ -162,70 +288,37 @@ export class DashboardComponent {
     }
   }
 
-  // Applications
-  approveApplication(id: number) {
-    const app = this.applications.find(a => a.id === id);
-    if (app) app.status = 'approved';
-  }
-
-  rejectApplication(id: number) {
-    const app = this.applications.find(a => a.id === id);
-    if (app) app.status = 'rejected';
-  }
-
-  getPendingApplications(): number {
-    return this.applications.filter(a => a.status === 'pending').length;
-  }
-
-  getApprovedApplications(): number {
-    return this.applications.filter(a => a.status === 'approved').length;
-  }
-
-  getRejectedApplications(): number {
-    return this.applications.filter(a => a.status === 'rejected').length;
-  }
-
-  // Internships
-  approveInternship(id: number) {
-    const internship = this.internships.find(i => i.id === id);
-    if (internship) internship.status = 'approved';
-  }
-
-  rejectInternship(id: number) {
-    const internship = this.internships.find(i => i.id === id);
-    if (internship) internship.status = 'rejected';
-  }
-
-  getTotalStudents(): number {
-    return this.classes.reduce((total, c) => total + c.studentCount, 0);
-  }
-
-  getPendingInternships(): number {
-    return this.internships.filter(i => i.status === 'pending').length;
-  }
-
-  getApprovedInternships(): number {
-    return this.internships.filter(i => i.status === 'approved').length;
-  }
-
-  selectClass(className: string) {
-    this.selectedClass = className;
-  }
-
-  getCurrentTimetable(): TimetableSlot[] {
-    return this.timetables[this.selectedClass] || [];
-  }
-
-  getTotalTeachers(): number {
-  return this.teachers.length;
+  openAddClassModal() {
+  this.showAddClassModal = true;
 }
 
-getTotalDepartments(): number {
-  return [...new Set(this.teachers.map(t => t.department))].length;
+closeAddClassModal() {
+  this.showAddClassModal = false;
+  this.newClass = { name: '', department: '', level: '', studentCount: 0, subjects: '' };
+}
+
+addClass() {
+  if (!this.newClass.name || !this.newClass.department || !this.newClass.level) {
+    return;
+  }
+  const classData = {
+    name: this.newClass.name,
+    department: this.newClass.department,
+    level: this.newClass.level,
+    studentCount: this.newClass.studentCount,
+    subjects: this.newClass.subjects.split(',').map((s: string) => s.trim())
+  };
+  this.collegeClassService.addClass(classData).subscribe({
+    next: () => {
+      this.loadClasses();
+      this.closeAddClassModal();
+    },
+    error: (err) => console.error('Error adding class:', err)
+  });
 }
 
   logout() {
-    this.router.navigate(['/']);
-  }
+  this.authService.logout();
+}
 
 }
