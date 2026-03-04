@@ -78,8 +78,12 @@
                                 <td>{{ app.dateOfBirth }}</td>
                                 <td><span class="badge {{ app.status | lowercase }}">{{ app.status }}</span></td>
                                 <td>
-                                    <button class="btn-approve" (click)="approveApplication(app.id)">Approve</button>
-                                    <button class="btn-reject" (click)="rejectApplication(app.id)">Reject</button>
+                                <td>
+                                    <button class="btn-approve" *ngIf="app.status === 'PENDING'"
+                                        (click)="approveApplication(app.id)">Approve</button>
+                                    <button class="btn-reject" *ngIf="app.status === 'PENDING'"
+                                        (click)="rejectApplication(app.id)">Reject</button>
+                                    <button class="btn-delete" (click)="deleteApplication(app.id)">Delete</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -120,7 +124,9 @@
                                 <td>{{ teacher.email }}</td>
                                 <td>{{ teacher.department }}</td>
                                 <td>{{ teacher.subjects }}</td>
-                                <td><button class="btn-edit">Edit</button></td>
+                                <td><button class="btn-edit" (click)="openEditTeacherModal(teacher)">Edit</button>
+                                    <button class="btn-delete" (click)="deleteTeacher(teacher.id)">Delete</button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -163,7 +169,9 @@
                                 <td>{{ class.level }}</td>
                                 <td>{{ class.studentCount }}</td>
                                 <td>{{ class.subjects.join(', ') }}</td>
-                                <td><button class="btn-edit">Edit</button></td>
+                                <td><button class="btn-edit">Edit</button>
+                                    <button class="btn-delete" (click)="deleteClass(class.id)">Delete</button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -241,14 +249,17 @@
                         </thead>
                         <tbody>
                             <tr *ngFor="let internship of internships">
-                                <td>{{ internship.student }}</td>
+                                <td>{{ internship.studentName }}</td>
                                 <td>{{ internship.company }}</td>
                                 <td>{{ internship.duration }}</td>
-                                <td><span class="badge {{ internship.status }}">{{ internship.status }}</span></td>
+                                <td><span class="badge {{ internship.status | lowercase }}">{{ internship.status
+                                        }}</span></td>
                                 <td>
-                                    <button class="btn-approve"
+                                    <button class="btn-approve" *ngIf="internship.status === 'PENDING'"
                                         (click)="approveInternship(internship.id)">Approve</button>
-                                    <button class="btn-reject" (click)="rejectInternship(internship.id)">Reject</button>
+                                    <button class="btn-reject" *ngIf="internship.status === 'PENDING'"
+                                        (click)="rejectInternship(internship.id)">Reject</button>
+                                    <button class="btn-delete" (click)="deleteInternship(internship.id)">Delete</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -349,6 +360,47 @@
             <div class="modal-actions">
                 <button class="btn-cancel" (click)="closeAddClassModal()">Cancel</button>
                 <button class="btn-add" (click)="addClass()">Add Class</button>
+            </div>
+        </div>
+    </div>
+    <!-- Edit Teacher Modal -->
+    <div class="modal-overlay" *ngIf="showEditTeacherModal" (click)="closeEditTeacherModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Edit Teacher</h3>
+                <span class="modal-close" (click)="closeEditTeacherModal()">✕</span>
+            </div>
+            <div class="form-group">
+                <label>First Name</label>
+                <input type="text" placeholder="First Name" [(ngModel)]="editTeacher.firstName" name="editFirstName" />
+            </div>
+            <div class="form-group">
+                <label>Last Name</label>
+                <input type="text" placeholder="Last Name" [(ngModel)]="editTeacher.lastName" name="editLastName" />
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" placeholder="Email" [(ngModel)]="editTeacher.email" name="editEmail" />
+            </div>
+            <div class="form-group">
+                <label>Department</label>
+                <select [(ngModel)]="editTeacher.department" name="editDepartment">
+                    <option value="" disabled selected>Select department</option>
+                    <option>Computer Science</option>
+                    <option>Mathematics</option>
+                    <option>Physics</option>
+                    <option>Civil Engineering</option>
+                    <option>Electrical Engineering</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Subjects (comma separated)</label>
+                <input type="text" placeholder="e.g. Algorithms, Data Structures" [(ngModel)]="editTeacher.subjects"
+                    name="editSubjects" />
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" (click)="closeEditTeacherModal()">Cancel</button>
+                <button class="btn-add" (click)="updateTeacher()">Save Changes</button>
             </div>
         </div>
     </div>

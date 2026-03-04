@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
+import { ChatService } from '../services/chat.service';
+import { UserService } from '../services/user.service';
 
 interface TimetableSlot {
   time: string;
@@ -23,12 +25,6 @@ interface Assignment {
   totalStudents: number;
 }
 
-interface ChatMessage {
-  sender: string;
-  text: string;
-  time: string;
-}
-
 interface Submission {
   student: string;
   submitted: boolean;
@@ -42,9 +38,21 @@ interface Submission {
   templateUrl: './teacher-dashboard.component.html',
   styleUrl: './teacher-dashboard.component.css'
 })
-export class TeacherDashboardComponent {
+export class TeacherDashboardComponent implements OnInit {
 
   activeSection: string = 'timetable';
+  loggedInName: string = '';
+  currentUserId: string = '';
+  currentUserName: string = '';
+
+  profile = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    role: '',
+    department: '',
+    subjects: ''
+  };
 
   // Timetable
   timetable: TimetableSlot[] = [
@@ -75,23 +83,62 @@ export class TeacherDashboardComponent {
   gradeList: Submission[] = [];
 
   // Chat
-  students: string[] = ['Ahmed Ben Ali', 'Sarra Mansour', 'Yassine Trabelsi'];
+  students: any[] = [];
   selectedStudent: string = '';
   newMessage: string = '';
+  currentMessages: any[] = [];
 
-  chats: { [key: string]: ChatMessage[] } = {
-    'Ahmed Ben Ali': [
-      { sender: 'Ahmed Ben Ali', text: 'Hello Dr. Bouaziz, I had a question about recursion.', time: '09:20' },
-      { sender: 'me', text: 'Of course! What is your question?', time: '09:25' },
-    ],
-    'Sarra Mansour': [],
-    'Yassine Trabelsi': [],
-  };
+  constructor(
+    private router: Router,
+    private chatService: ChatService,
+    private authService: AuthService,
+    private userService: UserService
+  ) {}
 
-  constructor(private router: Router, private authService: AuthService) {}
+  ngOnInit() {
+    this.loadCurrentUser();
+    this.loadStudents();
+  }
+
+  loadCurrentUser() {
+    const token = this.authService.getToken();
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      this.loggedInName = payload.firstName + ' ' + payload.lastName;
+      this.currentUserId = payload.sub;
+      this.currentUserName = payload.firstName + ' ' + payload.lastName;
+      this.profile = {
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        email: payload.sub,
+        role: payload.role,
+        department: payload.department || 'Not assigned yet',
+        subjects: payload.subjects || 'Not assigned yet'
+      };
+      this.chatService.connect(this.currentUserId);
+      this.chatService.getMessages().subscribe((message) => {
+        const key = message.senderId === this.currentUserId ? message.receiverId : message.senderId;
+        if (this.selectedStudent === key || message.senderId === this.currentUserId) {
+          this.currentMessages = [...this.currentMessages, message];
+        }
+      });
+    }
+  }
+
+  loadStudents() {
+    this.userService.getStudents().subscribe({
+      next: (data) => {
+        this.students = data;
+      },
+      error: (err) => console.error('Error loading students:', err)
+    });
+  }
 
   setSection(section: string) {
     this.activeSection = section;
+    if (section === 'chat' && this.selectedStudent) {
+      this.loadConversation();
+    }
   }
 
   getSectionTitle(): string {
@@ -157,28 +204,38 @@ export class TeacherDashboardComponent {
   }
 
   // Chat
-  getChatMessages(): ChatMessage[] {
-    if (!this.selectedStudent) return [];
-    return this.chats[this.selectedStudent] || [];
+  getChatMessages(): any[] {
+    return this.currentMessages;
   }
 
   sendMessage() {
     if (!this.newMessage.trim() || !this.selectedStudent) return;
-    const now = new Date();
-    const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
-    if (!this.chats[this.selectedStudent]) {
-      this.chats[this.selectedStudent] = [];
-    }
-    this.chats[this.selectedStudent] = [...this.chats[this.selectedStudent], {
-      sender: 'me',
-      text: this.newMessage.trim(),
-      time: time
-    }];
+    const message = {
+      senderId: this.currentUserId,
+      senderName: this.currentUserName,
+      receiverId: this.selectedStudent,
+      receiverName: this.selectedStudent,
+      content: this.newMessage.trim()
+    };
+    this.chatService.sendMessage(message);
     this.newMessage = '';
   }
 
-  logout() {
-  this.authService.logout();
-}
+  onStudentSelected() {
+    this.loadConversation();
+  }
 
+  loadConversation() {
+    if (!this.selectedStudent) return;
+    this.chatService.getConversation(this.currentUserId, this.selectedStudent).subscribe({
+      next: (messages) => {
+        this.currentMessages = messages;
+      },
+      error: (err) => console.error('Error loading conversation:', err)
+    });
+  }
+
+  logout() {
+    this.authService.logout();
+  }
 }

@@ -34,6 +34,6 @@ export class CollegeClassService {
   }
 
   deleteClass(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
-  }
+  return this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders(), responseType: 'text' });
+}
 }

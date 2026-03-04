@@ -31,9 +31,9 @@
     <div class="top-navbar">
       <h1 class="page-title">{{ getSectionTitle() }}</h1>
       <div class="teacher-info">
-        <span class="teacher-avatar">👨‍🏫</span>
-        <span class="teacher-name">Dr. Karim Bouaziz</span>
-      </div>
+  <span class="teacher-avatar">👨‍🏫</span>
+  <span class="teacher-name">{{ loggedInName }}</span>
+</div>
     </div>
 
     <!-- Content Area -->
@@ -115,18 +115,20 @@
         <div class="section-card chat-card">
           <div class="card-header">
             <h3>Chat with Students</h3>
-            <select class="teacher-select" [(ngModel)]="selectedStudent">
-              <option value="" disabled>Select a student</option>
-              <option *ngFor="let student of students">{{ student }}</option>
-            </select>
+            <select class="teacher-select" [(ngModel)]="selectedStudent" (ngModelChange)="onStudentSelected()">
+  <option value="" disabled>Select a student</option>
+  <option *ngFor="let student of students" [value]="student.email">
+    {{ student.firstName }} {{ student.lastName }}
+  </option>
+</select>
           </div>
           <div class="chat-messages">
             <div *ngFor="let msg of getChatMessages()" class="message"
-              [class.sent]="msg.sender === 'me'"
-              [class.received]="msg.sender !== 'me'">
-              <div class="message-bubble">{{ msg.text }}</div>
-              <div class="message-time">{{ msg.time }}</div>
-            </div>
+  [class.sent]="msg.senderId === currentUserId"
+  [class.received]="msg.senderId !== currentUserId">
+  <div class="message-bubble">{{ msg.content }}</div>
+  <div class="message-time">{{ msg.timestamp | date:'HH:mm' }}</div>
+</div>
             <div *ngIf="getChatMessages().length === 0" class="no-messages">
               No messages yet. Start the conversation!
             </div>
@@ -140,40 +142,37 @@
       </div>
 
       <!-- Profile Section -->
-      <div *ngIf="activeSection === 'profile'">
-        <div class="section-card">
-          <h3>My Profile</h3>
-          <div class="profile-grid">
-            <div class="profile-item">
-              <span class="profile-label">Full Name</span>
-              <span class="profile-value">Dr. Karim Bouaziz</span>
-            </div>
-            <div class="profile-item">
-              <span class="profile-label">Email</span>
-              <span class="profile-value">k.bouaziz&#64;edusmart.com</span>
-            </div>
-            <div class="profile-item">
-              <span class="profile-label">Department</span>
-              <span class="profile-value">Computer Science</span>
-            </div>
-            <div class="profile-item">
-              <span class="profile-label">Subjects</span>
-              <span class="profile-value">Algorithms, Data Structures</span>
-            </div>
-            <div class="profile-item">
-              <span class="profile-label">Classes</span>
-              <span class="profile-value">DSI1, DSI2, DSI3</span>
-            </div>
-            <div class="profile-item">
-              <span class="profile-label">Phone</span>
-              <span class="profile-value">+216 55 987 654</span>
-            </div>
-          </div>
-        </div>
+<div *ngIf="activeSection === 'profile'">
+  <div class="section-card">
+    <h3>My Profile</h3>
+    <div class="profile-grid">
+      <div class="profile-item">
+        <span class="profile-label">First Name</span>
+        <span class="profile-value">{{ profile.firstName }}</span>
       </div>
-
+      <div class="profile-item">
+        <span class="profile-label">Last Name</span>
+        <span class="profile-value">{{ profile.lastName }}</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Email</span>
+        <span class="profile-value">{{ profile.email }}</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Role</span>
+        <span class="profile-value">{{ profile.role }}</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Department</span>
+        <span class="profile-value">{{ profile.department }}</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Subjects</span>
+        <span class="profile-value">{{ profile.subjects }}</span>
+      </div>
     </div>
   </div>
+</div>
 
   <!-- Post Assignment Modal -->
   <div class="modal-overlay" *ngIf="showAssignmentModal" (click)="closeAssignmentModal()">

@@ -6,6 +6,7 @@ import { ApplicationService } from '../services/application.service';
 import { AuthService } from '../services/auth.service';
 import { TeacherService } from '../services/teacher.service';
 import { CollegeClassService } from '../services/college-class.service';
+import { InternshipService } from '../services/internship.service';
 
 interface Application {
   id: string;
@@ -44,10 +45,12 @@ interface Teacher {
 }
 
 interface Internship {
-  id: number;
-  student: string;
+  id: string;
+  studentId: string;
+  studentName: string;
   company: string;
   duration: string;
+  startDate: string;
   status: string;
 }
 
@@ -72,8 +75,6 @@ export class DashboardComponent implements OnInit {
   ];
 
   internships: Internship[] = [
-    { id: 1, student: 'Ahmed Ben Ali', company: 'Vermeg', duration: '2 months', status: 'pending' },
-    { id: 2, student: 'Sarra Mansour', company: 'Telnet', duration: '3 months', status: 'approved' },
   ];
 
   selectedClass: string = 'DSI1';
@@ -106,7 +107,18 @@ export class DashboardComponent implements OnInit {
   };
 
 
-  
+showEditTeacherModal: boolean = false;
+selectedTeacher: any = null;
+
+editTeacher = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  department: '',
+  subjects: ''
+};  
+
+
 showAddClassModal: boolean = false;
 newClass = {
   name: '',
@@ -128,14 +140,25 @@ newClass = {
     private applicationService: ApplicationService,
     private authService: AuthService,
     private teacherService: TeacherService,
-    private collegeClassService: CollegeClassService
+    private collegeClassService: CollegeClassService,
+    private internshipService: InternshipService
   ) {}
 
   ngOnInit() {
-    this.loadApplications();
-    this.loadTeachers();
-    this.loadClasses();
-  }
+  this.loadApplications();
+  this.loadTeachers();
+  this.loadClasses();
+  this.loadInternships();
+}
+
+  loadInternships() {
+  this.internshipService.getAllInternships().subscribe({
+    next: (data) => {
+      this.internships = data;
+    },
+    error: (err) => console.error('Error loading internships:', err)
+  });
+}
 
   loadClasses() {
   this.collegeClassService.getAllClasses().subscribe({
@@ -222,12 +245,17 @@ newClass = {
     role: 'TEACHER'
   };
 
+  console.log('Sending teacher:', teacher);
+
   this.teacherService.addTeacher(teacher).subscribe({
     next: () => {
       this.loadTeachers();
       this.closeAddTeacherModal();
     },
-    error: (err) => console.error('Error adding teacher:', err)
+    error: (err) => {
+      console.log('Full error:', err);
+      console.log('Error message:', err.error);
+    }
   });
 }
 
@@ -254,23 +282,27 @@ newClass = {
   }
 
   // Internships
-  approveInternship(id: number) {
-    const internship = this.internships.find(i => i.id === id);
-    if (internship) internship.status = 'approved';
-  }
+  approveInternship(id: string) {
+  this.internshipService.approveInternship(id).subscribe({
+    next: () => this.loadInternships(),
+    error: (err) => console.error(err)
+  });
+}
 
-  rejectInternship(id: number) {
-    const internship = this.internships.find(i => i.id === id);
-    if (internship) internship.status = 'rejected';
-  }
+rejectInternship(id: string) {
+  this.internshipService.rejectInternship(id).subscribe({
+    next: () => this.loadInternships(),
+    error: (err) => console.error(err)
+  });
+}
 
-  getPendingInternships(): number {
-    return this.internships.filter(i => i.status === 'pending').length;
-  }
+getPendingInternships(): number {
+  return this.internships.filter(i => i.status === 'PENDING').length;
+}
 
-  getApprovedInternships(): number {
-    return this.internships.filter(i => i.status === 'approved').length;
-  }
+getApprovedInternships(): number {
+  return this.internships.filter(i => i.status === 'APPROVED').length;
+}
 
   // Sidebar
   setSection(section: string) {
@@ -317,6 +349,71 @@ addClass() {
   });
 }
 
+openEditTeacherModal(teacher: any) {
+  this.selectedTeacher = teacher;
+  this.editTeacher = {
+    firstName: teacher.firstName,
+    lastName: teacher.lastName,
+    email: teacher.email,
+    department: teacher.department,
+    subjects: teacher.subjects
+  };
+  this.showEditTeacherModal = true;
+}
+
+closeEditTeacherModal() {
+  this.showEditTeacherModal = false;
+  this.selectedTeacher = null;
+}
+
+updateTeacher() {
+  if (!this.editTeacher.firstName || !this.editTeacher.email || !this.editTeacher.department) {
+    return;
+  }
+  this.teacherService.updateTeacher(this.selectedTeacher.id, this.editTeacher).subscribe({
+    next: () => {
+      this.loadTeachers();
+      this.closeEditTeacherModal();
+    },
+    error: (err) => console.error('Error updating teacher:', err)
+  });
+}
+
+deleteApplication(id: string) {
+  if (confirm('Are you sure you want to delete this application?')) {
+    this.applicationService.deleteApplication(id).subscribe({
+      next: () => this.loadApplications(),
+      error: (err) => console.error(err)
+    });
+  }
+}
+
+deleteTeacher(id: string) {
+  if (confirm('Are you sure you want to delete this teacher?')) {
+    this.teacherService.deleteTeacher(id).subscribe({
+      next: () => this.loadTeachers(),
+      error: (err) => console.error(err)
+    });
+  }
+}
+
+deleteClass(id: string) {
+  if (confirm('Are you sure you want to delete this class?')) {
+    this.collegeClassService.deleteClass(id).subscribe({
+      next: () => this.loadClasses(),
+      error: (err) => console.error(err)
+    });
+  }
+}
+
+deleteInternship(id: string) {
+  if (confirm('Are you sure you want to delete this internship?')) {
+    this.internshipService.deleteInternship(id).subscribe({
+      next: () => this.loadInternships(),
+      error: (err) => console.error(err)
+    });
+  }
+}
   logout() {
   this.authService.logout();
 }

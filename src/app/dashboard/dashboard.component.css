@@ -443,3 +443,21 @@
 .btn-cancel:hover {
   border-color: white;
 }
+
+.btn-delete {
+  padding: 5px 14px;
+  background: rgba(255, 77, 77, 0.1);
+  color: #ff4d4d;
+  border: 1px solid #ff4d4d;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.2s ease;
+  margin-left: 6px;
+}
+
+.btn-delete:hover {
+  background: #ff4d4d;
+  color: white;
+}

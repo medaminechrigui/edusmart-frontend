@@ -1,8 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
+import { InternshipService } from '../services/internship.service';
+import { ChatService } from '../services/chat.service';
+import { UserService } from '../services/user.service';
+
 interface TimetableSlot {
   time: string;
   monday: string;
@@ -21,17 +25,13 @@ interface Assignment {
 }
 
 interface InternshipRequest {
-  id: number;
+  id: string;
+  studentId: string;
+  studentName: string;
   company: string;
   duration: string;
   startDate: string;
-  status: 'pending' | 'approved' | 'rejected';
-}
-
-interface ChatMessage {
-  sender: string;
-  text: string;
-  time: string;
+  status: string;
 }
 
 @Component({
@@ -41,9 +41,21 @@ interface ChatMessage {
   templateUrl: './student-dashboard.component.html',
   styleUrl: './student-dashboard.component.css'
 })
-export class StudentDashboardComponent {
+export class StudentDashboardComponent implements OnInit {
 
   activeSection: string = 'timetable';
+  loggedInName: string = '';
+  currentUserId: string = '';
+  currentUserName: string = '';
+
+  profile = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    role: '',
+    class: '',
+    department: ''
+  };
 
   // Timetable
   timetable: TimetableSlot[] = [
@@ -61,12 +73,8 @@ export class StudentDashboardComponent {
   ];
 
   // Internships
-  internshipRequests: InternshipRequest[] = [
-    { id: 1, company: 'Vermeg', duration: '2 months', startDate: '2024-11-01', status: 'pending' },
-  ];
-
+  internshipRequests: InternshipRequest[] = [];
   showInternshipModal: boolean = false;
-
   newInternship = {
     company: '',
     duration: '',
@@ -74,22 +82,78 @@ export class StudentDashboardComponent {
   };
 
   // Chat
-  teachers: string[] = ['Dr. Karim Bouaziz', 'Dr. Leila Hamdi'];
+  teachers: any[] = [];
   selectedTeacher: string = '';
   newMessage: string = '';
+  currentMessages: any[] = [];
 
-  chats: { [key: string]: ChatMessage[] } = {
-    'Dr. Karim Bouaziz': [
-      { sender: 'Dr. Karim Bouaziz', text: 'Hello! Do you have any questions about the last lecture?', time: '09:15' },
-      { sender: 'me', text: 'Yes! I had a question about recursion.', time: '09:20' },
-    ],
-    'Dr. Leila Hamdi': [],
-  };
+  constructor(
+    private router: Router,
+    private internshipService: InternshipService,
+    private authService: AuthService,
+    private chatService: ChatService,
+    private userService: UserService
+  ) {}
 
-  constructor(private router: Router, private authService: AuthService) {}
+  ngOnInit() {
+    this.loadCurrentUser();
+    this.loadInternships();
+    this.loadTeachers();
+  }
+
+  loadCurrentUser() {
+    const token = this.authService.getToken();
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      this.loggedInName = payload.firstName + ' ' + payload.lastName;
+      this.currentUserId = payload.sub;
+      this.currentUserName = payload.firstName + ' ' + payload.lastName;
+      this.profile = {
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        email: payload.sub,
+        role: payload.role,
+        class: payload.class || 'Not assigned yet',
+        department: payload.department || 'Not assigned yet'
+      };
+      this.chatService.connect(this.currentUserId);
+      this.chatService.getMessages().subscribe((message) => {
+        const key = message.senderId === this.currentUserId ? message.receiverId : message.senderId;
+        if (this.selectedTeacher === key || message.senderId === this.currentUserId) {
+          this.currentMessages = [...this.currentMessages, message];
+        }
+      });
+    }
+  }
+
+  loadTeachers() {
+    this.userService.getTeachers().subscribe({
+      next: (data) => {
+        this.teachers = data;
+      },
+      error: (err) => console.error('Error loading teachers:', err)
+    });
+  }
+
+  loadInternships() {
+    const token = this.authService.getToken();
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const studentEmail = payload.sub;
+      this.internshipService.getInternshipsByStudent(studentEmail).subscribe({
+        next: (data) => {
+          this.internshipRequests = data;
+        },
+        error: (err) => console.error('Error loading internships:', err)
+      });
+    }
+  }
 
   setSection(section: string) {
     this.activeSection = section;
+    if (section === 'chat' && this.selectedTeacher) {
+      this.loadConversation();
+    }
   }
 
   getSectionTitle(): string {
@@ -131,43 +195,61 @@ export class StudentDashboardComponent {
     if (!this.newInternship.company || !this.newInternship.duration || !this.newInternship.startDate) {
       return;
     }
-    this.internshipRequests = [...this.internshipRequests, {
-      id: this.internshipRequests.length + 1,
+    const token = this.authService.getToken();
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const internship = {
+      studentId: payload.sub,
+      studentName: payload.firstName + ' ' + payload.lastName,
       company: this.newInternship.company,
       duration: this.newInternship.duration,
-      startDate: this.newInternship.startDate,
-      status: 'pending'
-    }];
-    this.closeInternshipModal();
+      startDate: this.newInternship.startDate
+    };
+    this.internshipService.submitInternship(internship).subscribe({
+      next: () => {
+        this.loadInternships();
+        this.closeInternshipModal();
+      },
+      error: (err) => console.error('Error submitting internship:', err)
+    });
   }
 
   getApprovedInternships(): number {
-    return this.internshipRequests.filter(r => r.status === 'approved').length;
+    return this.internshipRequests.filter(r => r.status === 'APPROVED').length;
   }
 
   // Chat
-  getChatMessages(): ChatMessage[] {
-    if (!this.selectedTeacher) return [];
-    return this.chats[this.selectedTeacher] || [];
+  getChatMessages(): any[] {
+    return this.currentMessages;
+  }
+
+  onTeacherSelected() {
+    this.loadConversation();
+  }
+
+  loadConversation() {
+    if (!this.selectedTeacher) return;
+    this.chatService.getConversation(this.currentUserId, this.selectedTeacher).subscribe({
+      next: (messages) => {
+        this.currentMessages = messages;
+      },
+      error: (err) => console.error('Error loading conversation:', err)
+    });
   }
 
   sendMessage() {
     if (!this.newMessage.trim() || !this.selectedTeacher) return;
-    const now = new Date();
-    const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
-    if (!this.chats[this.selectedTeacher]) {
-      this.chats[this.selectedTeacher] = [];
-    }
-    this.chats[this.selectedTeacher] = [...this.chats[this.selectedTeacher], {
-      sender: 'me',
-      text: this.newMessage.trim(),
-      time: time
-    }];
+    const message = {
+      senderId: this.currentUserId,
+      senderName: this.currentUserName,
+      receiverId: this.selectedTeacher,
+      receiverName: this.selectedTeacher,
+      content: this.newMessage.trim()
+    };
+    this.chatService.sendMessage(message);
     this.newMessage = '';
   }
 
   logout() {
-  this.authService.logout();
-}
-
+    this.authService.logout();
+  }
 }
