@@ -1,0 +1,311 @@
+<div class="dashboard-container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">🎓 EduSmart</div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" [class.active]="activeSection === 'timetable'" (click)="setSection('timetable')">
+        📅 My Timetable
+      </div>
+      <div class="nav-item" [class.active]="activeSection === 'classroom'" (click)="setSection('classroom')">
+        🏫 Virtual Classroom
+      </div>
+      <div class="nav-item" [class.active]="activeSection === 'internship'" (click)="setSection('internship')">
+        💼 Internship Request
+      </div>
+      <div class="nav-item" [class.active]="activeSection === 'chat'" (click)="setSection('chat')">
+        💬 Text My Teacher
+      </div>
+      <div class="nav-item" [class.active]="activeSection === 'profile'" (click)="setSection('profile')">
+        👤 My Profile
+      </div>
+    </nav>
+    <div class="sidebar-footer" (click)="logout()">
+      🚪 Logout
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+
+    <!-- Top Navbar -->
+    <div class="top-navbar">
+      <h1 class="page-title">{{ getSectionTitle() }}</h1>
+      <div class="student-info">
+        <span class="student-avatar">👨‍🎓</span>
+        <span class="student-name">{{ loggedInName }}</span>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+
+      <!-- Timetable Section -->
+      <div *ngIf="activeSection === 'timetable'">
+        <div class="section-card">
+          <div class="card-header">
+            <h3>My Class Timetable — DSI1</h3>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let slot of timetable">
+                <td class="time-slot">{{ slot.time }}</td>
+                <td [class.subject-cell]="slot.monday !== '—'">{{ slot.monday }}</td>
+                <td [class.subject-cell]="slot.tuesday !== '—'">{{ slot.tuesday }}</td>
+                <td [class.subject-cell]="slot.wednesday !== '—'">{{ slot.wednesday }}</td>
+                <td [class.subject-cell]="slot.thursday !== '—'">{{ slot.thursday }}</td>
+                <td [class.subject-cell]="slot.friday !== '—'">{{ slot.friday }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Virtual Classroom Section -->
+      <div *ngIf="activeSection === 'classroom'">
+        <div class="stats-row">
+          <div class="stat-card">
+            <span class="stat-number">{{ assignments.length }}</span>
+            <span class="stat-label">Total Assignments</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">{{ getSubmittedCount() }}</span>
+            <span class="stat-label">Submitted</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">{{ getPendingCount() }}</span>
+            <span class="stat-label">Pending</span>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <h3>My Assignments</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Subject</th>
+                <th>Due Date</th>
+                <th>Assignment File</th>
+                <th>Status</th>
+                <th>Grade</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of assignments">
+                <td>{{ a.title }}</td>
+                <td>{{ a.subject }}</td>
+                <td>{{ a.dueDate }}</td>
+                <td>
+  <button *ngIf="a.fileData" class="btn-download"
+    (click)="downloadFile(a.fileData, a.fileName, a.fileType)">
+    📄 Download
+  </button>
+  <span *ngIf="!a.fileData">—</span>
+</td>
+                <td>
+                  <span *ngIf="!hasSubmitted(a)" class="badge pending">Not Submitted</span>
+                  <span *ngIf="hasSubmitted(a) && getMySubmission(a)?.status === 'SUBMITTED'" class="badge approved">Submitted</span>
+                  <span *ngIf="hasSubmitted(a) && getMySubmission(a)?.status === 'GRADED'" class="badge approved">Graded</span>
+                </td>
+                <td>
+                  <span *ngIf="getMySubmission(a)?.grade !== null && getMySubmission(a)?.grade !== undefined">
+                    {{ getMySubmission(a)?.grade }} / 20
+                  </span>
+                  <span *ngIf="getMySubmission(a)?.grade === null || getMySubmission(a)?.grade === undefined">—</span>
+                </td>
+                <td>
+  <button *ngIf="!hasSubmitted(a)" class="btn-add" (click)="openSubmitModal(a)">
+    Submit
+  </button>
+  <button *ngIf="hasSubmitted(a)" class="btn-download"
+    (click)="downloadFile(getMySubmission(a).fileData, getMySubmission(a).fileName, getMySubmission(a).fileType)">
+    📄 My File
+  </button>
+</td>
+              </tr>
+              <tr *ngIf="assignments.length === 0">
+                <td colspan="7" style="text-align:center; color: #a0b0c0;">No assignments yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Internship Section -->
+      <div *ngIf="activeSection === 'internship'">
+        <div class="stats-row">
+          <div class="stat-card">
+            <span class="stat-number">{{ internships.length }}</span>
+            <span class="stat-label">Total Requests</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">{{ getApprovedInternships() }}</span>
+            <span class="stat-label">Approved</span>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="card-header">
+            <h3>My Internship Requests</h3>
+            <button class="btn-add" (click)="openInternshipModal()">+ New Request</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Duration</th>
+                <th>Start Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let req of internships">
+                <td>{{ req.company }}</td>
+                <td>{{ req.duration }}</td>
+                <td>{{ req.startDate }}</td>
+                <td><span class="badge {{ req.status | lowercase }}">{{ req.status }}</span></td>
+              </tr>
+              <tr *ngIf="internships.length === 0">
+                <td colspan="4" style="text-align:center; color: #a0b0c0;">No internship requests yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Chat Section -->
+      <div *ngIf="activeSection === 'chat'">
+        <div class="section-card chat-card">
+          <div class="card-header">
+            <h3>Text My Teacher</h3>
+            <select class="teacher-select" [(ngModel)]="selectedTeacher" (ngModelChange)="onTeacherSelected()">
+              <option value="" disabled>Select a teacher</option>
+              <option *ngFor="let teacher of teachers" [value]="teacher.email">
+                {{ teacher.firstName }} {{ teacher.lastName }}
+              </option>
+            </select>
+          </div>
+          <div class="chat-messages">
+            <div *ngFor="let msg of getChatMessages()" class="message"
+              [class.sent]="msg.senderId === currentUserId"
+              [class.received]="msg.senderId !== currentUserId">
+              <div class="message-bubble">{{ msg.content }}</div>
+              <div class="message-time">{{ msg.timestamp | date:'HH:mm' }}</div>
+            </div>
+            <div *ngIf="getChatMessages().length === 0" class="no-messages">
+              No messages yet. Start the conversation!
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" class="chat-input" placeholder="Type a message..."
+              [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" />
+            <button class="btn-send" (click)="sendMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Section -->
+      <div *ngIf="activeSection === 'profile'">
+        <div class="section-card">
+          <h3>My Profile</h3>
+          <div class="profile-grid">
+            <div class="profile-item">
+              <span class="profile-label">First Name</span>
+              <span class="profile-value">{{ profile.firstName }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="profile-label">Last Name</span>
+              <span class="profile-value">{{ profile.lastName }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="profile-label">Email</span>
+              <span class="profile-value">{{ profile.email }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="profile-label">Role</span>
+              <span class="profile-value">{{ profile.role }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="profile-label">Class</span>
+              <span class="profile-value">{{ profile.class }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="profile-label">Department</span>
+              <span class="profile-value">{{ profile.department }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Submit Assignment Modal -->
+  <div class="modal-overlay" *ngIf="showSubmitModal" (click)="closeSubmitModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Submit Assignment</h3>
+        <span class="modal-close" (click)="closeSubmitModal()">✕</span>
+      </div>
+      <p style="color: #a0b0c0; margin-bottom: 16px;">
+        {{ selectedAssignment?.title }} — Due: {{ selectedAssignment?.dueDate }}
+      </p>
+      <div class="form-group">
+        <label>Upload Your Work (PDF or Word)</label>
+        <input type="file" accept=".pdf,.docx" (change)="onSubmissionFileSelected($event)"
+          style="color: #a0b0c0; font-size: 0.85rem;" />
+        <small *ngIf="submissionFile.fileName" style="color: #00d4ff;">✓ {{ submissionFile.fileName }}</small>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeSubmitModal()">Cancel</button>
+        <button class="btn-add" (click)="submitAssignment()" [disabled]="!submissionFile.fileData">
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Internship Modal -->
+  <div class="modal-overlay" *ngIf="showInternshipModal" (click)="closeInternshipModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>New Internship Request</h3>
+        <span class="modal-close" (click)="closeInternshipModal()">✕</span>
+      </div>
+      <div class="form-group">
+        <label>Company Name</label>
+        <input type="text" placeholder="e.g. Vermeg" [(ngModel)]="newInternship.company" name="company" />
+      </div>
+      <div class="form-group">
+        <label>Duration</label>
+        <select [(ngModel)]="newInternship.duration" name="duration">
+          <option value="" disabled selected>Select duration</option>
+          <option>1 month</option>
+          <option>2 months</option>
+          <option>3 months</option>
+          <option>6 months</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="date" [(ngModel)]="newInternship.startDate" name="startDate" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeInternshipModal()">Cancel</button>
+        <button class="btn-add" (click)="submitInternship()">Submit Request</button>
+      </div>
+    </div>
+  </div>
+
+</div>

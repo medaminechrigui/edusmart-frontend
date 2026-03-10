@@ -1,0 +1,655 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.dashboard-container {
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  min-height: 100vh;
+  background: #0f1923;
+  color: white;
+}
+
+/* ---- SIDEBAR ---- */
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: #0a1520;
+  border-right: 1px solid rgba(0, 212, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  padding: 30px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.sidebar-logo {
+  font-size: 1.3rem;
+  font-weight: 700;
+  padding: 0 25px;
+  margin-bottom: 40px;
+  color: #00d4ff;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.nav-item {
+  padding: 14px 25px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  opacity: 1;
+  background: rgba(0, 212, 255, 0.05);
+}
+
+.nav-item.active {
+  opacity: 1;
+  border-left: 3px solid #00d4ff;
+  background: rgba(0, 212, 255, 0.08);
+  color: #00d4ff;
+  font-weight: 600;
+}
+
+.sidebar-footer {
+  padding: 14px 25px;
+  font-size: 0.9rem;
+  opacity: 0.5;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-footer:hover {
+  opacity: 1;
+  color: #ff4d4d;
+}
+
+/* ---- MAIN CONTENT ---- */
+.main-content {
+  margin-left: 240px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 35px;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+  background: #0a1520;
+}
+
+.page-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.teacher-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.teacher-avatar {
+  font-size: 1.4rem;
+}
+
+.content-area {
+  padding: 30px 35px;
+}
+
+/* ---- STATS ---- */
+.stats-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  border-radius: 12px;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 150px;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #00d4ff;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+/* ---- SECTION CARD ---- */
+.section-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  border-radius: 12px;
+  padding: 25px;
+}
+
+.section-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.card-header h3 {
+  margin-bottom: 0;
+}
+
+/* ---- TABLE ---- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 10px 14px;
+  opacity: 0.5;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.data-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  opacity: 0.85;
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.time-slot {
+  color: #00d4ff;
+  font-weight: 600;
+  opacity: 1 !important;
+  white-space: nowrap;
+}
+
+.subject-cell {
+  background: rgba(0, 212, 255, 0.06);
+  color: white;
+  font-weight: 500;
+}
+
+/* ---- BADGES ---- */
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge.pending {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+}
+
+.badge.approved {
+  background: rgba(0, 212, 100, 0.15);
+  color: #00d464;
+}
+
+.badge.rejected {
+  background: rgba(255, 77, 77, 0.15);
+  color: #ff4d4d;
+}
+
+/* ---- BUTTONS ---- */
+.btn-add {
+  padding: 8px 18px;
+  background: #00d4ff;
+  color: #0f1923;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.btn-add:hover {
+  background: white;
+}
+
+.btn-edit {
+  padding: 5px 14px;
+  background: rgba(0, 212, 255, 0.1);
+  color: #00d4ff;
+  border: 1px solid #00d4ff;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+  background: #00d4ff;
+  color: #0f1923;
+}
+
+/* ---- GRADE INPUT ---- */
+.grade-input {
+  width: 70px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: rgba(255, 255, 255, 0.07);
+  color: white;
+  font-size: 0.85rem;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  text-align: center;
+}
+
+.grade-input:focus {
+  border-color: #00d4ff;
+}
+
+.grade-input:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ---- CHAT ---- */
+.chat-card {
+  display: flex;
+  flex-direction: column;
+  height: 520px;
+}
+
+.teacher-select {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: rgba(255, 255, 255, 0.07);
+  color: white;
+  font-size: 0.85rem;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  cursor: pointer;
+}
+
+.teacher-select option {
+  background: #0a1520;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  max-width: 65%;
+}
+
+.message.sent {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.message.received {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.message-bubble {
+  padding: 10px 16px;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.sent .message-bubble {
+  background: #00d4ff;
+  color: #0f1923;
+  border-bottom-right-radius: 4px;
+}
+
+.received .message-bubble {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border-bottom-left-radius: 4px;
+}
+
+.message-time {
+  font-size: 0.72rem;
+  opacity: 0.4;
+  margin-top: 4px;
+}
+
+.no-messages {
+  text-align: center;
+  opacity: 0.3;
+  font-size: 0.85rem;
+  margin-top: 40px;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: rgba(255, 255, 255, 0.07);
+  color: white;
+  font-size: 0.9rem;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  transition: border 0.3s ease;
+}
+
+.chat-input:focus {
+  border-color: #00d4ff;
+}
+
+.chat-input::placeholder {
+  opacity: 0.4;
+}
+
+.btn-send {
+  padding: 12px 24px;
+  background: #00d4ff;
+  color: #0f1923;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.btn-send:hover {
+  background: white;
+}
+
+/* ---- PROFILE ---- */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.profile-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.profile-label {
+  font-size: 0.75rem;
+  opacity: 0.5;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.profile-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* ---- MODAL ---- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: #0f1f2e;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 16px;
+  padding: 35px;
+  width: 100%;
+  max-width: 500px;
+  color: white;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.modal-header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.modal-close {
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 1rem;
+  transition: opacity 0.2s;
+}
+
+.modal-close:hover {
+  opacity: 1;
+}
+
+.modal-card .form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.modal-card .form-group label {
+  font-size: 0.85rem;
+  margin-bottom: 7px;
+  opacity: 0.85;
+}
+
+.modal-card .form-group input,
+.modal-card .form-group select {
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: rgba(255, 255, 255, 0.07);
+  color: white;
+  font-size: 0.9rem;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  transition: border 0.3s ease;
+}
+
+.modal-card .form-group input:focus,
+.modal-card .form-group select:focus {
+  border-color: #00d4ff;
+}
+
+.modal-card .form-group select option {
+  background: #0f1f2e;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.btn-cancel {
+  padding: 10px 24px;
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  border-color: white;
+}
+/* ─── MODAL LARGE FIX ─── */
+.modal-large {
+  width: 850px !important;
+  max-width: 95vw !important;
+}
+
+/* ─── SUBMISSIONS TABLE BUTTONS ─── */
+.btn-download {
+  padding: 5px 12px;
+  background: rgba(0, 212, 255, 0.1);
+  color: #00d4ff;
+  border: 1px solid #00d4ff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: all 0.2s ease;
+}
+
+.btn-download:hover {
+  background: rgba(0, 212, 255, 0.25);
+}
+
+.btn-save-grade {
+  padding: 5px 12px;
+  background: rgba(39, 174, 96, 0.15);
+  color: #27ae60;
+  border: 1px solid #27ae60;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: all 0.2s ease;
+}
+
+.btn-save-grade:hover {
+  background: rgba(39, 174, 96, 0.3);
+}
+
+.btn-delete {
+  padding: 5px 12px;
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+  background: rgba(231, 76, 60, 0.3);
+}
+
+.btn-edit {
+  padding: 5px 12px;
+  background: rgba(243, 156, 18, 0.15);
+  color: #f39c12;
+  border: 1px solid #f39c12;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: all 0.2s ease;
+  margin-right: 6px;
+}
+
+.btn-edit:hover {
+  background: rgba(243, 156, 18, 0.3);
+}
+
+.btn-view {
+  padding: 5px 12px;
+  background: rgba(52, 152, 219, 0.15);
+  color: #3498db;
+  border: 1px solid #3498db;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: all 0.2s ease;
+}
+
+.btn-view:hover {
+  background: rgba(52, 152, 219, 0.3);
+}
+
+/* ─── GRADE INPUT ─── */
+.grade-input-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grade-input-cell input {
+  width: 65px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: #e0e0e0;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.grade-input-cell input:focus {
+  outline: none;
+  border-color: #00d4ff;
+}

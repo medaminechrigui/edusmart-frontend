@@ -1,0 +1,290 @@
+<div class="dashboard-container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">🎓 EduSmart</div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" [class.active]="activeSection === 'timetable'" (click)="setSection('timetable')">
+        📅 My Timetable
+      </div>
+      <div class="nav-item" [class.active]="activeSection === 'classroom'" (click)="setSection('classroom')">
+        🏫 Virtual Classroom
+      </div>
+      <div class="nav-item" [class.active]="activeSection === 'chat'" (click)="setSection('chat')">
+        💬 Chat with Students
+      </div>
+      <div class="nav-item" [class.active]="activeSection === 'profile'" (click)="setSection('profile')">
+        👤 My Profile
+      </div>
+    </nav>
+    <div class="sidebar-footer" (click)="logout()">
+      🚪 Logout
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+
+    <!-- Top Navbar -->
+    <div class="top-navbar">
+      <h1 class="page-title">{{ getSectionTitle() }}</h1>
+      <div class="teacher-info">
+        <span class="teacher-avatar">👨‍🏫</span>
+        <span class="teacher-name">{{ loggedInName }}</span>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+
+      <!-- Timetable Section -->
+      <div *ngIf="activeSection === 'timetable'">
+        <div class="section-card">
+          <h3>My Teaching Schedule</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let slot of timetable">
+                <td class="time-slot">{{ slot.time }}</td>
+                <td [class.subject-cell]="slot.monday !== '—'">{{ slot.monday }}</td>
+                <td [class.subject-cell]="slot.tuesday !== '—'">{{ slot.tuesday }}</td>
+                <td [class.subject-cell]="slot.wednesday !== '—'">{{ slot.wednesday }}</td>
+                <td [class.subject-cell]="slot.thursday !== '—'">{{ slot.thursday }}</td>
+                <td [class.subject-cell]="slot.friday !== '—'">{{ slot.friday }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Virtual Classroom Section -->
+      <div *ngIf="activeSection === 'classroom'">
+        <div class="stats-row">
+          <div class="stat-card">
+            <span class="stat-number">{{ assignments.length }}</span>
+            <span class="stat-label">Total Assignments</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">{{ getTotalSubmissions() }}</span>
+            <span class="stat-label">Total Submissions</span>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="card-header">
+            <h3>My Assignments</h3>
+            <button class="btn-add" (click)="openAddAssignmentModal()">+ New Assignment</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Due Date</th>
+                <th>File</th>
+                <th>Submissions</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of assignments">
+                <td>{{ a.title }}</td>
+                <td>{{ a.className }}</td>
+                <td>{{ a.subject }}</td>
+                <td>{{ a.dueDate }}</td>
+                <td>
+                  <button *ngIf="a.fileData" class="btn-view"
+                    (click)="downloadFile(a.fileData, a.fileName, a.fileType)">
+                    📄 Download
+                  </button>
+                  <span *ngIf="!a.fileData">—</span>
+                </td>
+                <td>{{ a.submissions?.length || 0 }} submitted</td>
+                <td>
+                  <button class="btn-edit" (click)="viewSubmissions(a)">Submissions</button>
+                  <button class="btn-delete" (click)="deleteAssignment(a.id)">Delete</button>
+                </td>
+              </tr>
+              <tr *ngIf="assignments.length === 0">
+                <td colspan="7" style="text-align:center; color: #a0b0c0;">No assignments posted yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Chat Section -->
+      <div *ngIf="activeSection === 'chat'">
+        <div class="section-card chat-card">
+          <div class="card-header">
+            <h3>Chat with Students</h3>
+            <select class="teacher-select" [(ngModel)]="selectedStudent" (ngModelChange)="onStudentSelected()">
+              <option value="" disabled>Select a student</option>
+              <option *ngFor="let student of students" [value]="student.email">
+                {{ student.firstName }} {{ student.lastName }}
+              </option>
+            </select>
+          </div>
+          <div class="chat-messages">
+            <div *ngFor="let msg of getChatMessages()" class="message"
+              [class.sent]="msg.senderId === currentUserId"
+              [class.received]="msg.senderId !== currentUserId">
+              <div class="message-bubble">{{ msg.content }}</div>
+              <div class="message-time">{{ msg.timestamp | date:'HH:mm' }}</div>
+            </div>
+            <div *ngIf="getChatMessages().length === 0" class="no-messages">
+              No messages yet. Start the conversation!
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" class="chat-input" placeholder="Type a message..."
+              [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" />
+            <button class="btn-send" (click)="sendMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Section -->
+      <div *ngIf="activeSection === 'profile'">
+        <div class="section-card">
+          <h3>My Profile</h3>
+          <div class="profile-grid">
+            <div class="profile-item">
+              <span class="profile-label">First Name</span>
+              <span class="profile-value">{{ profile.firstName }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="profile-label">Last Name</span>
+              <span class="profile-value">{{ profile.lastName }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="profile-label">Email</span>
+              <span class="profile-value">{{ profile.email }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="profile-label">Role</span>
+              <span class="profile-value">{{ profile.role }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="profile-label">Department</span>
+              <span class="profile-value">{{ profile.department }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="profile-label">Subjects</span>
+              <span class="profile-value">{{ profile.subjects }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Add Assignment Modal -->
+  <div class="modal-overlay" *ngIf="showAddAssignmentModal" (click)="closeAddAssignmentModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>New Assignment</h3>
+        <span class="modal-close" (click)="closeAddAssignmentModal()">✕</span>
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" placeholder="e.g. Exercise 1 — Sorting Algorithms"
+          [(ngModel)]="newAssignment.title" name="aTitle" />
+      </div>
+      <div class="form-group">
+        <label>Subject</label>
+        <input type="text" placeholder="e.g. Algorithms"
+          [(ngModel)]="newAssignment.subject" name="aSubject" />
+      </div>
+      <div class="form-group">
+        <label>Class</label>
+        <input type="text" placeholder="e.g. DSI1"
+          [(ngModel)]="newAssignment.className" name="aClass" />
+      </div>
+      <div class="form-group">
+        <label>Due Date</label>
+        <input type="date" [(ngModel)]="newAssignment.dueDate" name="aDueDate" />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea placeholder="Describe the assignment..." [(ngModel)]="newAssignment.description"
+          name="aDescription" rows="3"
+          style="width:100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; color: #e0e0e0; font-family: Poppins, sans-serif; resize: vertical;"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Attach File (PDF or Word)</label>
+        <input type="file" accept=".pdf,.docx" (change)="onAssignmentFileSelected($event)"
+          style="color: #a0b0c0; font-size: 0.85rem;" />
+        <small *ngIf="newAssignment.fileName" style="color: #00d4ff;">✓ {{ newAssignment.fileName }}</small>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeAddAssignmentModal()">Cancel</button>
+        <button class="btn-add" (click)="postAssignment()">Post Assignment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submissions Modal -->
+  <div class="modal-overlay" *ngIf="showSubmissionsModal" (click)="closeSubmissionsModal()">
+    <div class="modal-card modal-large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Submissions — {{ selectedAssignment?.title }}</h3>
+        <span class="modal-close" (click)="closeSubmissionsModal()">✕</span>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Submitted At</th>
+            <th>File</th>
+            <th>Status</th>
+            <th>Grade</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of selectedAssignment?.submissions">
+            <td>{{ s.studentName }}</td>
+            <td>{{ s.submittedAt }}</td>
+            <td>
+              <td>
+  <button class="btn-download" (click)="downloadFile(s.fileData, s.fileName, s.fileType)">
+    📄 Download
+  </button>
+</td>
+            <td><span class="badge {{ s.status | lowercase }}">{{ s.status }}</span></td>
+            <td>
+  <div class="grade-input-cell">
+    <input type="number" min="0" max="20" placeholder="0-20"
+      [(ngModel)]="gradeInputs[s.studentId]" />
+  </div>
+</td>
+            <td>
+  <button class="btn-save-grade" (click)="gradeSubmission(selectedAssignment.id, s.studentId)">
+    ✓ Save Grade
+  </button>
+</td>
+          </tr>
+          <tr *ngIf="selectedAssignment?.submissions?.length === 0">
+            <td colspan="6" style="text-align:center; color: #a0b0c0;">No submissions yet.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeSubmissionsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+</div>
